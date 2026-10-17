@@ -30,7 +30,7 @@
     if (typeof firebase !== "undefined" && firebase.auth) {
       firebase.auth().onAuthStateChanged(function(user) {
         if (!user && !sessionStorage.getItem("user_authenticated") && sessionStorage.getItem("user_role") !== "admin" && !sessionStorage.getItem("active_teacher_name")) {
-          window.location.replace("login.html");
+          window.location.replace("system.html");
         }
       });
     }
