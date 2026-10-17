@@ -30,7 +30,7 @@
     if (typeof firebase !== "undefined" && firebase.auth) {
       firebase.auth().onAuthStateChanged(function(user) {
         if (!user && !sessionStorage.getItem("user_authenticated") && sessionStorage.getItem("user_role") !== "admin" && !sessionStorage.getItem("active_teacher_name")) {
-          window.location.replace("index.html");
+          window.location.replace("system.html");
         }
       });
     }
@@ -56,13 +56,13 @@
       sessionStorage.removeItem("active_teacher_matched");
       if (typeof firebase !== 'undefined' && firebase.auth) {
         firebase.auth().signOut().then(() => {
-          window.location.href = 'index.html';
+          window.location.href = '   index.html';
         }).catch((err) => {
           console.error("Sign-out error:", err);
-          window.location.href = 'index.html';
+          window.location.href = '   index.html';
         });
       } else {
-        window.location.href = 'index.html';
+        window.location.href = '   index.html';
       }
     }
 
