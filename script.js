@@ -56,13 +56,13 @@
       sessionStorage.removeItem("active_teacher_matched");
       if (typeof firebase !== 'undefined' && firebase.auth) {
         firebase.auth().signOut().then(() => {
-          window.location.href = 'login.html';
+          window.location.href = 'system.html';
         }).catch((err) => {
           console.error("Sign-out error:", err);
-          window.location.href = 'login.html';
+          window.location.href = 'system.html';
         });
       } else {
-        window.location.href = 'login.html';
+        window.location.href = 'system.html';
       }
     }
 
