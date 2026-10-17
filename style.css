@@ -1,0 +1,80 @@
+body { font-family: system-ui, -apple-system, sans-serif; }
+    .scrollbar-thin::-webkit-scrollbar { height: 6px; width: 6px; }
+    .scrollbar-thin::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+    .scrollbar-thin::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    .scrollbar-thin::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    @keyframes pulse-red {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+      50% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+    }
+    .conflict-glow { animation: pulse-red 2s infinite; }
+    
+    /* ENHANCEMENT: Enhanced Interactive Controls, Buttons & Clickable FX */
+    button, select, input[type="text"], input[type="file"], .draggable-card, #trash-dropzone {
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+      position: relative;
+    }
+    button:not(:disabled):hover, select:hover, input:hover {
+      filter: brightness(1.05);
+    }
+    button:not(:disabled):active, .draggable-card:active {
+      transform: scale(0.96) !important;
+    }
+    .draggable-card { 
+      cursor: grab; 
+    }
+    .draggable-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px -2px rgba(99, 102, 241, 0.18), 0 3px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+    .draggable-card:active { 
+      cursor: grabbing; 
+    }
+    .drag-over { 
+      border: 2px dashed #6366f1 !important; 
+      background-color: #eef2ff !important; 
+      transform: scale(1.01);
+    }
+    .trash-over { 
+      border-color: #ef4444 !important; 
+      background-color: #fee2e2 !important; 
+      color: #dc2626 !important; 
+      transform: scale(1.05);
+      box-shadow: 0 0 12px rgba(239, 68, 68, 0.3);
+    }
+    button:focus-visible, select:focus-visible, input:focus-visible {
+      outline: 2px solid #6366f1 !important;
+      outline-offset: 2px !important;
+    }
+
+    /* DROPDOWN FIX: Contain dropdown strictly inside viewport limits on small screens */
+    #mobile-menu {
+      max-width: calc(100vw - 1rem) !important;
+      max-height: calc(100vh - 5rem) !important;
+      overflow-y: auto !important;
+      right: 0 !important;
+      left: auto !important;
+    }
+    
+    /* ENHANCEMENT: Print Media CSS Improvements */
+    @media print {
+      .no-print { display: none !important; }
+      .print-only { display: block !important; }
+      .page-break { page-break-after: always; }
+      body { background: white !important; color: black !important; font-size: 10pt; }
+      main { max-width: 100% !important; padding: 0 !important; margin: 0 !important; }
+      .shadow-sm, .shadow-md, .shadow-xl, .shadow-2xl, .shadow { box-shadow: none !important; }
+      .border, .border-r, .border-b { border-color: #cbd5e1 !important; }
+      table { page-break-inside: auto; width: 100% !important; }
+      tr { page-break-inside: avoid; page-break-after: auto; }
+      td, th { padding: 4px 6px !important; }
+    }
+
+    /* RED BLINK ANIMATION FOR DISABLED SAVE BUTTON ON TIME SLOT CONFLICT */
+    @keyframes blink-red-btn {
+      0%, 100% { background-color: #e11d48; box-shadow: 0 0 0 0 rgba(225, 29, 72, 0.7); }
+      50% { background-color: #9f1239; box-shadow: 0 0 12px 4px rgba(225, 29, 72, 0.5); }
+    }
+    .animate-btn-blink-red {
+      animation: blink-red-btn 1s infinite ease-in-out !important;
+    }

@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#12345a">
+  <title>Class Scheduler | Log In</title>
+
+  <!-- Firebase compat SDKs: authentication handles passwords; Realtime Database stores user profiles and app settings. -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+  <style>
+    :root {
+      --brand-primary: #12345a;
+      --brand-secondary: #1769aa;
+      --brand-accent: #f4b400;
+      --page-bg: #eef3f9;
+      --card-bg: #ffffff;
+      --text-main: #182638;
+      --text-muted: #64748b;
+      --border: #d8e2ee;
+      --success: #18794e;
+      --danger: #b42318;
+      --radius: 20px;
+      --shadow: 0 18px 55px rgba(18, 52, 90, .14);
+    }
+
+    * { box-sizing: border-box; }
+    html { min-height: 100%; -webkit-text-size-adjust: 100%; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      color: var(--text-main);
+      background:
+        radial-gradient(circle at 8% 8%, rgba(23,105,170,.10), transparent 30rem),
+        radial-gradient(circle at 92% 92%, rgba(244,180,0,.12), transparent 25rem),
+        var(--page-bg);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .site-header {
+      width: 100%;
+      color: #fff;
+      background: var(--brand-primary);
+      border-bottom: 4px solid var(--brand-accent);
+      transition: background-color 0.3s ease, border-color 0.3s ease;
+    }
+    .header-inner {
+      width: min(1160px, 100%);
+      margin: 0 auto;
+      padding: 16px clamp(16px, 4vw, 34px);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .logo-wrap {
+      width: 66px;
+      height: 66px;
+      flex: 0 0 66px;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      border-radius: 16px;
+      background: rgba(255,255,255,.12);
+      border: 1px solid rgba(255,255,255,.28);
+    }
+    .logo-wrap img { width: 100%; height: 100%; object-fit: contain; display: none; }
+    .logo-fallback { font-size: 29px; line-height: 1; }
+    .header-copy { min-width: 0; flex: 1; }
+    .eyebrow {
+      margin: 0 0 4px;
+      color: #f8d66d;
+      font-size: .73rem;
+      font-weight: 800;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+    #mainHeader {
+      margin: 0;
+      color: #fff;
+      font-size: clamp(1.05rem, 2.7vw, 1.65rem);
+      line-height: 1.25;
+      overflow-wrap: anywhere;
+    }
+    .header-subtitle {
+      margin: 5px 0 0;
+      color: #dbeafe;
+      font-size: .88rem;
+      line-height: 1.4;
+    }
+
+    main {
+      width: 100%;
+      max-width: 1160px;
+      margin: auto;
+      padding: clamp(20px, 4vw, 42px) clamp(14px, 4vw, 34px);
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(310px, 430px);
+      align-items: start;
+      gap: clamp(22px, 4vw, 48px);
+      flex: 1;
+    }
+    .welcome-panel { padding: clamp(8px, 2vw, 24px) 0; }
+    .welcome-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 12px;
+      color: var(--brand-primary);
+      background: #dceafa;
+      border-radius: 999px;
+      font-size: .78rem;
+      font-weight: 800;
+    }
+    .welcome-panel h2 {
+      max-width: 620px;
+      margin: 18px 0 14px;
+      color: var(--brand-primary);
+      font-size: clamp(2rem, 5vw, 3.65rem);
+      line-height: 1.04;
+      letter-spacing: -.045em;
+    }
+    .welcome-panel > p {
+      max-width: 620px;
+      color: var(--text-muted);
+      font-size: clamp(.98rem, 1.7vw, 1.12rem);
+      line-height: 1.75;
+    }
+    .feature-list { display: grid; gap: 13px; margin: 28px 0 0; padding: 0; list-style: none; }
+    .feature-list li { display: flex; gap: 12px; align-items: flex-start; line-height: 1.5; }
+    .feature-icon {
+      display: grid;
+      place-items: center;
+      width: 32px;
+      height: 32px;
+      flex: 0 0 32px;
+      border-radius: 10px;
+      color: var(--brand-primary);
+      background: #fff;
+      box-shadow: 0 3px 12px rgba(18,52,90,.08);
+      font-weight: 900;
+    }
+
+    .login-card {
+      min-width: 0;
+      padding: clamp(22px, 4vw, 34px);
+      background: var(--card-bg);
+      border: 1px solid rgba(216,226,238,.95);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    .card-heading { margin: 0 0 7px; color: var(--brand-primary); font-size: 1.65rem; }
+    .card-intro { margin: 0 0 24px; color: var(--text-muted); line-height: 1.5; font-size: .94rem; }
+    
+    /* Mode Toggle Switch for Standard User vs Teacher Portal */
+    .portal-tab-group {
+      display: flex;
+      background: #f1f5f9;
+      padding: 4px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      border: 1px solid var(--border);
+    }
+    .portal-tab-btn {
+      flex: 1;
+      padding: 9px 12px;
+      border: 0;
+      border-radius: 9px;
+      font-size: 0.82rem;
+      font-weight: 800;
+      cursor: pointer;
+      background: transparent;
+      color: var(--text-muted);
+      transition: all 0.2s ease;
+    }
+    .portal-tab-btn.active {
+      background: #ffffff;
+      color: var(--brand-primary);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .field { margin: 0 0 17px; }
+    label { display: block; margin: 0 0 7px; font-weight: 750; font-size: .9rem; }
+    input {
+      display: block;
+      width: 100%;
+      min-width: 0;
+      min-height: 48px;
+      padding: 12px 13px;
+      border: 1px solid #c7d4e3;
+      border-radius: 11px;
+      background: #fff;
+      color: var(--text-main);
+      font: inherit;
+      outline: none;
+      transition: border-color .15s ease, box-shadow .15s ease;
+    }
+    input:focus { border-color: var(--brand-secondary); box-shadow: 0 0 0 3px rgba(23,105,170,.15); }
+    .password-row { display: flex; gap: 8px; }
+    .password-row input { flex: 1; }
+    .show-password {
+      flex: 0 0 auto;
+      padding: 0 12px;
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      color: var(--brand-primary);
+      background: #f8fafc;
+      font: inherit;
+      font-size: .82rem;
+      font-weight: 750;
+      cursor: pointer;
+    }
+    
+    .matched-preview-box {
+      margin-top: -6px;
+      margin-bottom: 16px;
+      padding: 10px 12px;
+      background: #eef2ff;
+      border: 1px solid #c7d2fe;
+      border-radius: 10px;
+      font-size: 0.8rem;
+      color: #3730a3;
+      font-weight: 600;
+    }
+
+    button, .developer-link {
+      min-height: 46px;
+      border-radius: 11px;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform .12s ease, background .12s ease, opacity .12s ease;
+    }
+    button:active { transform: translateY(1px); }
+    button:focus-visible, a:focus-visible { outline: 3px solid #f4b400; outline-offset: 3px; }
+    button:disabled { opacity: .62; cursor: wait; }
+    .primary-button {
+      width: 100%;
+      border: 0;
+      color: #fff;
+      background: var(--brand-secondary);
+      box-shadow: 0 7px 16px rgba(23,105,170,.18);
+    }
+    .primary-button:hover { background: #10558d; }
+    .teacher-button {
+      width: 100%;
+      border: 0;
+      color: #fff;
+      background: #4f46e5;
+      box-shadow: 0 7px 16px rgba(79,70,229,.22);
+    }
+    .teacher-button:hover { background: #4338ca; }
+    .secondary-button {
+      width: 100%;
+      margin-top: 10px;
+      border: 1px solid #b8cbe0;
+      color: var(--brand-primary);
+      background: #f7faff;
+    }
+    .secondary-button:hover { background: #eaf2fb; }
+    .developer-link {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      margin-top: 18px;
+      padding: 10px;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: .9rem;
+    }
+    .developer-link:hover { color: var(--brand-secondary); background: #f6f9fd; }
+    .separator { display: flex; align-items: center; gap: 12px; margin: 19px 0 0; color: #94a3b8; font-size: .78rem; }
+    .separator::before, .separator::after { content: ""; height: 1px; flex: 1; background: var(--border); }
+    .message {
+      display: none;
+      margin: 0 0 16px;
+      padding: 11px 12px;
+      border-radius: 10px;
+      font-size: .88rem;
+      line-height: 1.5;
+      overflow-wrap: anywhere;
+    }
+    .message.error { display: block; color: #8f1d16; background: #fff0ef; border: 1px solid #f5c2bf; }
+    .message.success { display: block; color: #17603d; background: #eaf8f0; border: 1px solid #b8e3c9; }
+    .small-note { margin: 18px 0 0; color: var(--text-muted); font-size: .78rem; line-height: 1.55; }
+    footer { padding: 16px; text-align: center; color: var(--text-muted); font-size: .78rem; }
+
+    @media (max-width: 760px) {
+      main { grid-template-columns: minmax(0, 1fr); max-width: 560px; gap: 20px; }
+      .welcome-panel { padding: 0; }
+      .welcome-panel h2 { font-size: clamp(2rem, 9vw, 3rem); }
+      .feature-list { margin-top: 18px; }
+    }
+    @media (max-width: 420px) {
+      .header-inner { gap: 11px; padding: 13px 14px; }
+      .logo-wrap { width: 48px; height: 48px; flex-basis: 48px; border-radius: 12px; }
+      .logo-fallback { font-size: 23px; }
+      .eyebrow { font-size: .64rem; }
+      .header-subtitle { font-size: .76rem; }
+      .login-card { padding: 20px 16px; border-radius: 16px; }
+      .password-row { flex-direction: column; }
+      .show-password { min-height: 40px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }
+    }
+  </style>
+</head>
+
+<body>
+  <header class="site-header" id="siteHeader">
+    <div class="header-inner">
+      <div class="logo-wrap" aria-label="School logo">
+        <img id="schoolLogo" alt="School logo">
+        <span class="logo-fallback" id="logoFallback" aria-hidden="true">🏫</span>
+      </div>
+      <div class="header-copy">
+        <p class="eyebrow">School Scheduling System</p>
+        <h1 id="mainHeader">Grade 12 Class Scheduler</h1>
+        <p class="header-subtitle" id="headerSubtitle">Secure access for authorized users</p>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="welcome-panel" aria-labelledby="welcomeTitle">
+      <span class="welcome-tag">✓ Organized · Responsive · Connected</span>
+      <h2 id="welcomeTitle">Plan smarter. Schedule with confidence.</h2>
+      <p>
+        Sign in to open the class scheduling workspace. The page adapts to desktop
+        computers, tablets, and mobile phones, so the sign-in form remains readable
+        and usable on different screen sizes.
+      </p>
+      <ul class="feature-list">
+        <li><span class="feature-icon" aria-hidden="true">✓</span><span><strong>Secure sign-in</strong><br>Passwords are handled by Firebase Authentication, not stored as readable text in Realtime Database.</span></li>
+        <li><span class="feature-icon" aria-hidden="true">👨‍🏫</span><span><strong>Teacher Portal Sync</strong><br>Faculty members can register their real full name to automatically match their family name and align their personal timetable.</span></li>
+        <li><span class="feature-icon" aria-hidden="true">↔</span><span><strong>Responsive layout</strong><br>Flexible spacing and controls designed for touchscreens and larger displays.</span></li>
+        <li><span class="feature-icon" aria-hidden="true">⚙</span><span><strong>School branding</strong><br>Customized globally across all screens via the Developer Maintenance Console.</span></li>
+      </ul>
+    </section>
+
+    <section class="login-card" aria-labelledby="loginTitle">
+      <h2 class="card-heading" id="loginTitle">Welcome back</h2>
+      <p class="card-intro" id="formDescription">Select portal type and enter your credentials.</p>
+
+      <!-- Portal Mode Selector -->
+      <div class="portal-tab-group">
+        <button type="button" class="portal-tab-btn active" id="tab-mode-standard" onclick="switchPortalMode('standard')">Standard User</button>
+        <button type="button" class="portal-tab-btn" id="tab-mode-teacher" onclick="switchPortalMode('teacher')">Teacher Portal</button>
+      </div>
+
+      <div id="statusMessage" class="message" role="status" aria-live="polite"></div>
+
+      <!-- FORM 1: STANDARD SYSTEM LOGIN FORM -->
+      <form id="loginForm" novalidate>
+        <div class="field">
+          <label for="email">Email Address</label>
+          <input id="email" name="email" type="email" autocomplete="email"
+                 autocapitalize="none" spellcheck="false"
+                 placeholder="e.g. user@school.edu" required>
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <div class="password-row">
+            <input id="password" name="password" type="password" autocomplete="current-password"
+                   placeholder="Enter your password" minlength="6" required>
+            <button class="show-password" type="button" id="togglePassword" aria-pressed="false">Show</button>
+          </div>
+        </div>
+        <button class="primary-button" type="submit" id="loginButton">Log In</button>
+        <button class="secondary-button" type="button" id="createAccountButton">Create Account</button>
+      </form>
+
+      <!-- FORM 2: TEACHER REGISTRATION & LOGIN DEDICATED FORM -->
+      <form id="teacherForm" style="display: none;" novalidate>
+        <div class="field" id="teacher-fullname-field">
+          <label for="teacherFullname">Full Real Name (For Registration)</label>
+          <input id="teacherFullname" name="teacherFullname" type="text"
+                 placeholder="e.g. Maria Clara Santos LAPIZ" oninput="livePreviewTeacherMatch()">
+        </div>
+
+        <div class="matched-preview-box" id="teacher-match-box">
+          Family Name Extracted: <span id="teacher-preview-name">---</span>
+        </div>
+
+        <div class="field">
+          <label for="teacherEmail">Teacher Email Address</label>
+          <input id="teacherEmail" name="teacherEmail" type="email" autocomplete="email"
+                 autocapitalize="none" spellcheck="false"
+                 placeholder="e.g. teacher@school.edu" required>
+        </div>
+
+        <div class="field">
+          <label for="teacherPassword">Password</label>
+          <div class="password-row">
+            <input id="teacherPassword" name="teacherPassword" type="password"
+                   placeholder="Enter your password" minlength="6" required>
+            <button class="show-password" type="button" id="toggleTeacherPassword" aria-pressed="false">Show</button>
+          </div>
+        </div>
+
+        <button class="teacher-button" type="button" id="teacherLoginButton" onclick="handleTeacherLoginAction()">Log In to Timetable</button>
+        <button class="secondary-button" type="button" id="teacherRegisterButton" onclick="handleTeacherRegisterAction()">Register New Teacher Account</button>
+      </form>
+
+      <div class="separator">OR</div>
+      <a class="developer-link" href="dev.html">Developer Log-in <span aria-hidden="true">&nbsp;↗</span></a>
+
+      <p class="small-note">
+        Teacher accounts automatically map family names to the 35 school faculty profiles. Do not share your password.
+      </p>
+    </section>
+  </main>
+
+  <footer id="siteFooter">Class Scheduler · Authorized access only</footer>
+
+  <script>
+    "use strict";
+
+    /*
+      FIREBASE CONFIGURATION
+      A Firebase web API key is not a password. Database Security Rules and
+      Firebase Authentication must be configured correctly in the Firebase Console.
+    */
+    const firebaseConfig = {
+      apiKey: "AIzaSyA2paUzz5cVQWEN8tmYLcOWpOaiXiuEfDA",
+      authDomain: "class-scheduler-webapp.firebaseapp.com",
+      databaseURL: "https://class-scheduler-webapp-default-rtdb.firebaseio.com",
+      projectId: "class-scheduler-webapp",
+      storageBucket: "class-scheduler-webapp.firebasestorage.app",
+      messagingSenderId: "1054299020306",
+      appId: "1:1054299020306:web:36515c6a0ddf0f585ecccb",
+      measurementId: "G-Q6DW3FX579"
+    };
+
+    const BRANDING_KEY = "classSchedulerLoginBrandingV1";
+    const NEXT_PAGE = "index.html";
+
+    // Master List of 35 Faculty Members for Family Name Auto-Matching
+    const FACULTY_TEACHERS = [
+      "LAPIZ", "AGUIRRE", "SANCHEZ", "RECILLA", "GALLARDO", "A. NACORDA", 
+      "CABILAN", "CABADING", "MONLEON", "VIVAS", "C. REYES", "PIAMONTE", 
+      "MIRANDA", "M. TORREFRANCA", "OLIVA", "ENTERO", "TUMULAK", "PELIGRO", 
+      "CORDOVA", "MORI", "TOPIA", "NAILON", "DAGATAN", "MONTES", "BAYATO", 
+      "CARTUCIANO", "NOBE", "A. F. GALLARDO", "R. Q. REYES", "SINADJAN", 
+      "DEGULACION", "GENTALLAN", "VILLAPANA", "JIMENEZ", "B. NACORDA"
+    ];
+
+    const loginForm = document.getElementById("loginForm");
+    const teacherForm = document.getElementById("teacherForm");
+    const emailInput = document.getElementById("email");
+    const passwordInput = document.getElementById("password");
+    const loginButton = document.getElementById("loginButton");
+    const createAccountButton = document.getElementById("createAccountButton");
+    const statusMessage = document.getElementById("statusMessage");
+    const togglePasswordButton = document.getElementById("togglePassword");
+
+    let auth = null;
+    let database = null;
+    let firebaseReady = false;
+    let isRedirecting = false;
+
+    function showMessage(message, type) {
+      statusMessage.textContent = message;
+      statusMessage.className = "message " + (type === "success" ? "success" : "error");
+    }
+
+    function clearMessage() {
+      statusMessage.textContent = "";
+      statusMessage.className = "message";
+    }
+
+    function setBusy(isBusy, action) {
+      loginButton.disabled = isBusy;
+      createAccountButton.disabled = isBusy;
+      loginButton.textContent = isBusy && action === "login" ? "Signing in…" : "Log In";
+      createAccountButton.textContent = isBusy && action === "create" ? "Creating account…" : "Create Account";
+    }
+
+    function isValidEmail(email) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+
+    /*
+      ==========================================================================
+      TEACHER PORTAL & FAMILY NAME MATCHING ENGINE
+      ==========================================================================
+    */
+    function switchPortalMode(mode) {
+      clearMessage();
+      const stdTab = document.getElementById("tab-mode-standard");
+      const teachTab = document.getElementById("tab-mode-teacher");
+
+      if (mode === 'teacher') {
+        stdTab.classList.remove('active');
+        teachTab.classList.add('active');
+        loginForm.style.display = 'none';
+        teacherForm.style.display = 'block';
+        document.getElementById('formDescription').textContent = "Register or sign in to your Teacher Timetable Profile.";
+      } else {
+        teachTab.classList.remove('active');
+        stdTab.classList.add('active');
+        teacherForm.style.display = 'none';
+        loginForm.style.display = 'block';
+        document.getElementById('formDescription').textContent = "Enter your email and password to continue.";
+      }
+    }
+
+    function extractFamilyName(fullName) {
+      if (!fullName) return "";
+      const parts = fullName.trim().split(/\s+/);
+      return parts[parts.length - 1].toUpperCase();
+    }
+
+    function findMatchingFacultyProfile(familyName) {
+      const cleanTarget = familyName.toUpperCase();
+      return FACULTY_TEACHERS.find(t => t.toUpperCase() === cleanTarget || cleanTarget.endsWith(t.toUpperCase())) || familyName;
+    }
+
+    function livePreviewTeacherMatch() {
+      const name = document.getElementById("teacherFullname").value;
+      const extracted = extractFamilyName(name);
+      const matched = findMatchingFacultyProfile(extracted);
+      const previewSpan = document.getElementById("teacher-preview-name");
+
+      if (extracted) {
+        previewSpan.textContent = extracted + " (Matched Timetable Profile: " + matched + ")";
+      } else {
+        previewSpan.textContent = "---";
+      }
+    }
+
+    function getRegisteredTeachers() {
+      try {
+        return JSON.parse(localStorage.getItem('registered_teacher_accounts_v1') || '[]');
+      } catch(e) {
+        return [];
+      }
+    }
+
+    function handleTeacherRegisterAction() {
+      clearMessage();
+      const fullName = document.getElementById("teacherFullname").value.trim();
+      const email = document.getElementById("teacherEmail").value.trim().toLowerCase();
+      const password = document.getElementById("teacherPassword").value.trim();
+
+      if (!fullName) {
+        showMessage("Please enter your full real name.", "error");
+        return;
+      }
+      if (!isValidEmail(email)) {
+        showMessage("Please enter a valid teacher email address.", "error");
+        return;
+      }
+      if (password.length < 6) {
+        showMessage("Password must be at least 6 characters long.", "error");
+        return;
+      }
+
+      const extracted = extractFamilyName(fullName);
+      const matched = findMatchingFacultyProfile(extracted);
+
+      const accounts = getRegisteredTeachers();
+      if (accounts.some(acc => acc.email === email)) {
+        showMessage("An account with this email already exists. Click 'Log In to Timetable' instead.", "error");
+        return;
+      }
+
+      const newAccount = {
+        fullName: fullName,
+        email: email,
+        password: password,
+        familyName: extracted,
+        matchedTeacher: matched,
+        createdAt: new Date().toISOString()
+      };
+
+      accounts.push(newAccount);
+      localStorage.setItem('registered_teacher_accounts_v1', JSON.stringify(accounts));
+
+      if (database) {
+        database.ref('teacherAccounts').push(newAccount).catch(err => console.warn("Firebase teacher account sync notice:", err));
+      }
+
+      sessionStorage.setItem("active_teacher_name", fullName);
+      sessionStorage.setItem("active_teacher_matched", matched);
+      sessionStorage.setItem("user_authenticated", "true");
+
+      showMessage("Teacher account registered! Redirecting to your personal schedule…", "success");
+      setTimeout(() => { redirectToApp(); }, 1200);
+    }
+
+    function handleTeacherLoginAction() {
+      clearMessage();
+      const email = document.getElementById("teacherEmail").value.trim().toLowerCase();
+      const password = document.getElementById("teacherPassword").value.trim();
+
+      if (!isValidEmail(email) || !password) {
+        showMessage("Please enter your teacher email and password.", "error");
+        return;
+      }
+
+      const accounts = getRegisteredTeachers();
+      const account = accounts.find(acc => acc.email === email && acc.password === password);
+
+      if (account) {
+        sessionStorage.setItem("active_teacher_name", account.fullName);
+        sessionStorage.setItem("active_teacher_matched", account.matchedTeacher);
+        sessionStorage.setItem("user_authenticated", "true");
+
+        showMessage("Welcome back, " + account.fullName + "! Redirecting to timetable…", "success");
+        setTimeout(() => { redirectToApp(); }, 1000);
+      } else {
+        showMessage("Invalid teacher credentials. Please check your email and password or click 'Register New Teacher Account'.", "error");
+      }
+    }
+
+    function friendlyAuthError(error, isCreating) {
+      const code = error && error.code ? error.code : "";
+      if (code === "auth/invalid-credential" ||
+          code === "auth/wrong-password" ||
+          code === "auth/user-not-found" ||
+          code === "auth/invalid-email") {
+        return "Incorrect email or password. Please try again.";
+      }
+      if (code === "auth/email-already-in-use") {
+        return "An account with that email already exists. Please log in instead.";
+      }
+      if (code === "auth/weak-password") {
+        return "Please use a password with at least 6 characters.";
+      }
+      if (code === "auth/operation-not-allowed") {
+        return "Email/Password sign-in is not enabled in Firebase Authentication.";
+      }
+      if (code === "auth/network-request-failed") {
+        return "Network connection failed. Check your internet connection and try again.";
+      }
+      if (code === "auth/too-many-requests") {
+        return "Too many attempts. Please wait a while before trying again.";
+      }
+      if (code === "auth/invalid-api-key" || code === "auth/app-not-authorized") {
+        return "Firebase configuration is incomplete or this domain is not authorized. Check the Firebase project settings.";
+      }
+      if (code === "PERMISSION_DENIED" || code === "database/permission-denied") {
+        return "Firebase denied access to the user profile. Check the Realtime Database Security Rules.";
+      }
+      return isCreating
+        ? "Could not create the account. Check Firebase settings and try again."
+        : "Unable to sign in. Check your connection and Firebase settings, then try again.";
+    }
+
+    async function saveUserProfile(user, email) {
+      if (!database || !user) return;
+      const profileRef = database.ref("users/" + user.uid + "/profile");
+      await profileRef.update({
+        email: email,
+        updatedAt: firebase.database.ServerValue.TIMESTAMP
+      });
+    }
+
+    function redirectToApp() {
+      if (isRedirecting) return;
+      isRedirecting = true;
+      sessionStorage.setItem("user_authenticated", "true");
+      window.location.replace(NEXT_PAGE);
+    }
+
+    async function handleLogin(event) {
+      event.preventDefault();
+      clearMessage();
+
+      if (!firebaseReady) {
+        showMessage("Firebase is not ready. Check the Firebase configuration in login.html.", "error");
+        return;
+      }
+
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
+
+      if (!isValidEmail(email)) {
+        showMessage("Please enter a valid email address.", "error");
+        emailInput.focus();
+        return;
+      }
+      if (!password) {
+        showMessage("Please enter your password.", "error");
+        passwordInput.focus();
+        return;
+      }
+
+      setBusy(true, "login");
+      try {
+        const credential = await auth.signInWithEmailAndPassword(email, password);
+        try {
+          await saveUserProfile(credential.user, email);
+        } catch (profileError) {
+          console.warn("Could not update the user's profile in Realtime Database.", profileError);
+        }
+        redirectToApp();
+      } catch (error) {
+        showMessage(friendlyAuthError(error, false), "error");
+        passwordInput.select();
+        passwordInput.focus();
+        setBusy(false);
+      }
+    }
+
+    async function handleCreateAccount() {
+      clearMessage();
+
+      if (!firebaseReady) {
+        showMessage("Firebase is not ready. Check the Firebase configuration in login.html.", "error");
+        return;
+      }
+
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
+
+      if (!isValidEmail(email)) {
+        showMessage("Please enter a valid email address to create an account.", "error");
+        emailInput.focus();
+        return;
+      }
+      if (password.length < 6) {
+        showMessage("Enter a password with at least 6 characters to create an account.", "error");
+        passwordInput.focus();
+        return;
+      }
+
+      const confirmed = window.confirm("Create a new account for email \"" + email + "\"? Use this only if self-registration is permitted by your school.");
+      if (!confirmed) return;
+
+      setBusy(true, "create");
+      try {
+        const credential = await auth.createUserWithEmailAndPassword(email, password);
+        try {
+          await saveUserProfile(credential.user, email);
+          showMessage("Account created successfully. Opening the scheduler…", "success");
+        } catch (profileError) {
+          console.warn("Account created, but the profile could not be saved to Realtime Database.", profileError);
+          showMessage("Account created. Opening the scheduler…", "success");
+        }
+        redirectToApp();
+      } catch (error) {
+        showMessage(friendlyAuthError(error, true), "error");
+        setBusy(false);
+      }
+    }
+
+    // --- REAL-TIME BRANDING APPLICATION ENGINE ---
+    function applyBranding(settings) {
+      const header = (settings && settings.header) || "Grade 12 Class Scheduler";
+      const subtitle = (settings && settings.subtitle) || "Secure access for authorized users";
+      const logoUrl = (settings && settings.logoUrl) || "";
+      const footer = (settings && settings.footer) || "Class Scheduler · Authorized access only";
+      const colorPrimary = (settings && settings.colorPrimary) || "#12345a";
+      const colorAccent = (settings && settings.colorAccent) || "#f4b400";
+
+      document.getElementById("mainHeader").textContent = header;
+      document.getElementById("headerSubtitle").textContent = subtitle;
+      document.getElementById("siteFooter").textContent = footer;
+
+      const siteHeader = document.getElementById("siteHeader");
+      if (siteHeader) {
+        siteHeader.style.backgroundColor = colorPrimary;
+        siteHeader.style.borderBottomColor = colorAccent;
+      }
+
+      const logo = document.getElementById("schoolLogo");
+      const fallback = document.getElementById("logoFallback");
+      if (logoUrl) {
+        try {
+          const parsed = new URL(logoUrl, window.location.href);
+          if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
+            throw new Error("Only HTTP or HTTPS logo URLs are accepted.");
+          }
+          logo.onload = function () {
+            logo.style.display = "block";
+            fallback.style.display = "none";
+          };
+          logo.onerror = function () {
+            logo.style.display = "none";
+            fallback.style.display = "inline";
+          };
+          logo.src = parsed.href;
+          logo.alt = header + " logo";
+        } catch (error) {
+          logo.removeAttribute("src");
+          logo.style.display = "none";
+          fallback.style.display = "inline";
+        }
+      } else {
+        logo.removeAttribute("src");
+        logo.style.display = "none";
+        fallback.style.display = "inline";
+      }
+    }
+
+    function loadBranding() {
+      let settings = null;
+      try {
+        settings = JSON.parse(localStorage.getItem(BRANDING_KEY) || "null");
+      } catch (error) {
+        console.warn("Local branding settings could not be read.", error);
+      }
+      applyBranding(settings);
+    }
+
+    // Real-Time Cross-Tab Event Listener for Storage Sync
+    window.addEventListener("storage", function(e) {
+      if (e.key === BRANDING_KEY || e.key === "dev_branding_settings") {
+        loadBranding();
+      }
+    });
+
+    togglePasswordButton.addEventListener("click", function () {
+      const showing = passwordInput.type === "text";
+      passwordInput.type = showing ? "password" : "text";
+      togglePasswordButton.textContent = showing ? "Show" : "Hide";
+      togglePasswordButton.setAttribute("aria-pressed", String(!showing));
+    });
+
+    const toggleTeacherPassBtn = document.getElementById("toggleTeacherPassword");
+    if (toggleTeacherPassBtn) {
+      toggleTeacherPassBtn.addEventListener("click", function () {
+        const tPass = document.getElementById("teacherPassword");
+        const showing = tPass.type === "text";
+        tPass.type = showing ? "password" : "text";
+        toggleTeacherPassBtn.textContent = showing ? "Show" : "Hide";
+        toggleTeacherPassBtn.setAttribute("aria-pressed", String(!showing));
+      });
+    }
+
+    loginForm.addEventListener("submit", handleLogin);
+    createAccountButton.addEventListener("click", handleCreateAccount);
+
+    // Initial branding load
+    loadBranding();
+
+    try {
+      if (typeof firebase === "undefined") {
+        throw new Error("Firebase SDK could not be loaded.");
+      }
+
+      if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+      }
+      auth = firebase.auth();
+      database = firebase.database();
+      firebaseReady = true;
+
+      // Realtime Firebase Listener for Cloud Branding Sync
+      database.ref('appBranding').on('value', function(snapshot) {
+        const cloudSettings = snapshot.val();
+        if (cloudSettings) {
+          applyBranding(cloudSettings);
+          localStorage.setItem(BRANDING_KEY, JSON.stringify(cloudSettings));
+        }
+      });
+
+      // If an authenticated session already exists, skip the login screen.
+      auth.onAuthStateChanged(function (user) {
+        if ((user || sessionStorage.getItem("active_teacher_name")) && !isRedirecting) {
+          redirectToApp();
+        }
+      });
+    } catch (error) {
+      console.error("Firebase initialization failed:", error);
+      showMessage("Firebase could not initialize. Check the Firebase configuration and internet connection.", "error");
+    }
+  </script>
+</body>
+</html>

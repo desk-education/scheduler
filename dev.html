@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Developer Portal & System Branding Console</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- Firebase Web SDK Compatibility Scripts -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+  <style>
+    body {
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: radial-gradient(circle at 10% 10%, rgba(18, 52, 90, 0.05), transparent 30rem),
+                  radial-gradient(circle at 90% 90%, rgba(244, 180, 0, 0.08), transparent 25rem),
+                  #f1f5f9;
+    }
+    
+    .card-shadow {
+      box-shadow: 0 15px 35px -5px rgba(18, 52, 90, 0.12), 0 5px 15px -5px rgba(0, 0, 0, 0.04);
+    }
+  </style>
+</head>
+<body class="min-h-screen text-slate-800 flex flex-col justify-between">
+
+  <!-- Developer Navigation Header -->
+  <header class="bg-slate-900 text-white border-b-4 border-amber-400 sticky top-0 z-50 shadow-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="p-2 bg-amber-500 rounded-lg text-slate-950 font-bold">
+          <i class="fa-solid fa-code text-xl"></i>
+        </div>
+        <div>
+          <h1 class="font-bold text-base sm:text-lg leading-tight">Developer Maintenance Console</h1>
+          <p class="text-xs text-amber-300">Class Scheduler • System Branding & Global Settings</p>
+        </div>
+      </div>
+
+      <!-- Navigation & Action Buttons -->
+      <div class="flex items-center space-x-3">
+        <!-- Go Back to Log-in Screen Button -->
+        <a href="login.html" class="inline-flex items-center px-3.5 py-2 rounded-lg text-xs font-bold text-slate-200 bg-slate-800 hover:bg-slate-700 hover:text-white border border-slate-700 transition shadow-sm">
+          <i class="fa-solid fa-arrow-left mr-2 text-amber-400"></i> Go Back to Log-in Screen
+        </a>
+        
+        <!-- Go to App Button -->
+        <a href="index.html" class="inline-flex items-center px-3.5 py-2 rounded-lg text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-500 transition shadow-md">
+          <i class="fa-solid fa-gauge mr-2"></i> Open App
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Body -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full">
+
+    <!-- Developer Authentication Overlay Screen (If Unauthenticated) -->
+    <section id="dev-auth-card" class="max-w-md mx-auto bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 card-shadow transition-all duration-300">
+      <div class="text-center mb-6">
+        <div class="w-16 h-16 bg-amber-100 text-amber-600 rounded-2xl mx-auto flex items-center justify-center text-2xl mb-3 border border-amber-200">
+          <i class="fa-solid fa-user-shield"></i>
+        </div>
+        <h2 class="text-2xl font-bold text-slate-900">Developer Access</h2>
+        <p class="text-xs text-slate-500 mt-1">Please enter developer security credentials to modify system configuration.</p>
+      </div>
+
+      <div id="auth-error-msg" class="hidden mb-4 p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-lg flex items-center">
+        <i class="fa-solid fa-circle-exclamation text-rose-500 mr-2 text-sm"></i>
+        <span id="auth-error-text">Invalid developer credentials. Please try again.</span>
+      </div>
+
+      <form onsubmit="handleDevLogin(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Developer Username</label>
+          <input type="text" id="dev-username" required placeholder="Enter developer username" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-medium focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Developer Password</label>
+          <input type="password" id="dev-password" required placeholder="Enter developer password" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-medium focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition">
+        </div>
+
+        <button type="submit" class="w-full py-3 bg-slate-900 hover:bg-slate-800 text-amber-400 font-bold text-sm rounded-xl transition shadow-md flex items-center justify-center">
+          <i class="fa-solid fa-key mr-2"></i> Authenticate Developer
+        </button>
+      </form>
+
+      <!-- Go Back Button Inside Authentication Card -->
+      <div class="mt-6 pt-4 border-t border-slate-200 text-center">
+        <a href="login.html" class="inline-flex items-center text-xs font-bold text-slate-500 hover:text-slate-800 transition">
+          <i class="fa-solid fa-arrow-left mr-1.5"></i> Return to Main Log-in Screen
+        </a>
+      </div>
+    </section>
+
+    <!-- Developer Settings Dashboard (Visible Upon Authentication) -->
+    <section id="dev-dashboard" class="hidden space-y-6">
+
+      <!-- Status Banner -->
+      <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div class="flex items-center space-x-3">
+          <span class="p-2.5 bg-amber-500 text-slate-950 rounded-xl text-lg font-bold"><i class="fa-solid fa-sliders"></i></span>
+          <div>
+            <h3 class="font-bold text-slate-900 text-sm sm:text-base">Branding & System Customization Engine</h3>
+            <p class="text-xs text-slate-600">Changes configured here dynamically sync to the login screen and Firebase Cloud Database as you type.</p>
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-2">
+          <button onclick="handleDevLogout()" class="px-3.5 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl transition shadow-sm flex items-center">
+            <i class="fa-solid fa-right-from-bracket mr-1.5"></i> Lock Console
+          </button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- Form Panel Column -->
+        <div class="lg:col-span-7 bg-white rounded-2xl p-6 border border-slate-200 card-shadow">
+          <h3 class="text-base font-bold text-slate-900 mb-4 flex items-center">
+            <i class="fa-solid fa-palette text-amber-500 mr-2"></i> Custom School Branding Parameters
+          </h3>
+
+          <form id="dev-branding-form" onsubmit="handleSaveBranding(event)" class="space-y-4">
+            
+            <div>
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">School / Institution Name</label>
+              <input type="text" id="cfg-header" placeholder="e.g. Don Vicente Rama Memorial NHS" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-medium focus:ring-2 focus:ring-amber-500 outline-none transition" oninput="handleLiveInputSync()">
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Department / Subtitle Tagline</label>
+              <input type="text" id="cfg-subtitle" placeholder="e.g. Grade 12 Class Scheduling System" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-medium focus:ring-2 focus:ring-amber-500 outline-none transition" oninput="handleLiveInputSync()">
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">School Logo Image URL</label>
+              <input type="url" id="cfg-logo" placeholder="https://example.com/school-logo.png" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-medium focus:ring-2 focus:ring-amber-500 outline-none transition" oninput="handleLiveInputSync()">
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">System Footer & Copyright Notice</label>
+              <input type="text" id="cfg-footer" placeholder="e.g. Class Scheduler • Authorized access only" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-medium focus:ring-2 focus:ring-amber-500 outline-none transition" oninput="handleLiveInputSync()">
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 pt-2">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Theme Primary Color</label>
+                <div class="flex items-center space-x-2">
+                  <input type="color" id="cfg-color-primary" value="#12345a" class="h-10 w-14 rounded-lg border border-slate-300 cursor-pointer" oninput="handleLiveInputSync()">
+                  <span id="cfg-color-primary-hex" class="font-mono text-xs text-slate-600 font-bold">#12345a</span>
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Theme Accent Color</label>
+                <div class="flex items-center space-x-2">
+                  <input type="color" id="cfg-color-accent" value="#f4b400" class="h-10 w-14 rounded-lg border border-slate-300 cursor-pointer" oninput="handleLiveInputSync()">
+                  <span id="cfg-color-accent-hex" class="font-mono text-xs text-slate-600 font-bold">#f4b400</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="pt-4 border-t border-slate-200 flex flex-wrap gap-3 justify-end">
+              <button type="button" onclick="resetBrandingDefaults()" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition">
+                <i class="fa-solid fa-rotate-left mr-1.5"></i> Reset Defaults
+              </button>
+              <button type="submit" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition shadow-md">
+                <i class="fa-solid fa-floppy-disk mr-1.5"></i> Save & Apply Changes
+              </button>
+            </div>
+
+          </form>
+        </div>
+
+        <!-- Real-Time Header Live Preview Column -->
+        <div class="lg:col-span-5 space-y-4">
+          <div class="bg-white rounded-2xl p-6 border border-slate-200 card-shadow">
+            <h3 class="text-base font-bold text-slate-900 mb-3 flex items-center">
+              <i class="fa-solid fa-eye text-indigo-500 mr-2"></i> Real-Time Interface Preview
+            </h3>
+            <p class="text-xs text-slate-500 mb-4">Simulated preview of how your updated header branding will render across system screens.</p>
+
+            <!-- Preview Card Component -->
+            <div id="preview-header-box" class="rounded-2xl overflow-hidden shadow-lg border border-slate-300 transition-all duration-300" style="background-color: #12345a; border-bottom: 4px solid #f4b400;">
+              <div class="p-4 flex items-center space-x-3 text-white">
+                <div class="w-12 h-12 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center shrink-0 overflow-hidden">
+                  <img id="preview-logo-img" class="w-full h-full object-contain hidden" alt="School Logo">
+                  <span id="preview-logo-fallback" class="text-2xl"><i class="fa-solid fa-school"></i></span>
+                </div>
+                <div class="min-w-0 flex-1">
+                  <p id="preview-eyebrow" class="text-[10px] font-bold uppercase tracking-widest text-amber-300">School Scheduling System</p>
+                  <h4 id="preview-title" class="font-bold text-sm sm:text-base leading-snug truncate">Grade 12 Class Scheduler</h4>
+                  <p id="preview-subtitle" class="text-xs text-slate-200 truncate mt-0.5">Secure access for authorized users</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Preview Footer -->
+            <div class="mt-4 p-3 bg-slate-100 rounded-xl text-center text-xs text-slate-600 font-medium" id="preview-footer-text">
+              Class Scheduler • Authorized access only
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- Notification Toast -->
+  <div id="dev-toast" class="fixed bottom-5 right-5 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl flex items-center space-x-3 text-sm z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+    <i id="dev-toast-icon" class="fa-solid fa-circle-check text-emerald-400 text-lg"></i>
+    <span id="dev-toast-msg">Settings saved successfully.</span>
+  </div>
+
+  <footer class="bg-slate-900 text-slate-400 text-center text-xs py-4 border-t border-slate-800">
+    Developer Maintenance Console • Authorized Engineering Personnel Only
+  </footer>
+
+  <script>
+    // --- SHARED STORAGE KEY WITH LOGIN.HTML ---
+    const BRANDING_STORAGE_KEY = "classSchedulerLoginBrandingV1";
+
+    // --- FIREBASE CONFIGURATION ---
+    const firebaseConfig = {
+      apiKey: "AIzaSyA2paUzz5cVQWEN8tmYLcOWpOaiXiuEfDA",
+      authDomain: "class-scheduler-webapp.firebaseapp.com",
+      databaseURL: "https://class-scheduler-webapp-default-rtdb.firebaseio.com",
+      projectId: "class-scheduler-webapp",
+      storageBucket: "class-scheduler-webapp.firebasestorage.app",
+      messagingSenderId: "1054299020306",
+      appId: "1:1054299020306:web:36515c6a0ddf0f585ecccb",
+      measurementId: "G-Q6DW3FX579"
+    };
+
+    // Firebase References
+    let db = null;
+    let auth = null;
+    let brandingRef = null;
+
+    try {
+      if (typeof firebase !== 'undefined') {
+        firebase.initializeApp(firebaseConfig);
+        db = firebase.database();
+        auth = firebase.auth();
+        brandingRef = db.ref('appBranding');
+      }
+    } catch(e) {
+      console.warn("Firebase not loaded on dev.html", e);
+    }
+
+    // Default Configuration Object
+    const DEFAULT_BRANDING = {
+      header: "Grade 12 Class Scheduler",
+      subtitle: "Secure access for authorized users",
+      logoUrl: "",
+      footer: "Class Scheduler • Authorized access only",
+      colorPrimary: "#12345a",
+      colorAccent: "#f4b400"
+    };
+
+    // Ensure Firebase Authentication is Active for Database Writes
+    function ensureFirebaseAuth() {
+      if (auth && !auth.currentUser) {
+        auth.signInAnonymously().catch(err => {
+          console.warn("Anonymous auth failed, relying on database fallback rules:", err);
+        });
+      }
+    }
+
+    // Session Verification
+    window.onload = function() {
+      const isAuth = sessionStorage.getItem("dev_authenticated");
+      if (isAuth === "true") {
+        ensureFirebaseAuth();
+        showDashboard();
+      } else {
+        showAuthCard();
+      }
+    };
+
+    // Developer Authentication Logic
+    function handleDevLogin(e) {
+      e.preventDefault();
+      const user = document.getElementById("dev-username").value.trim();
+      const pass = document.getElementById("dev-password").value.trim();
+
+      // Developer Credentials Validation
+      if (user === "developer" && pass === "dev123456") {
+        sessionStorage.setItem("dev_authenticated", "true");
+        document.getElementById("auth-error-msg").classList.add("hidden");
+        ensureFirebaseAuth();
+        showDashboard();
+        showToast("Authenticated as Developer successfully.", "success");
+      } else {
+        document.getElementById("auth-error-text").innerText = "Invalid developer credentials. Check username/password.";
+        document.getElementById("auth-error-msg").classList.remove("hidden");
+      }
+    }
+
+    function handleDevLogout() {
+      sessionStorage.removeItem("dev_authenticated");
+      if (auth && auth.currentUser) {
+        auth.signOut();
+      }
+      showAuthCard();
+      showToast("Developer console locked.", "info");
+    }
+
+    function showAuthCard() {
+      document.getElementById("dev-auth-card").classList.remove("hidden");
+      document.getElementById("dev-dashboard").classList.add("hidden");
+    }
+
+    function showDashboard() {
+      document.getElementById("dev-auth-card").classList.add("hidden");
+      document.getElementById("dev-dashboard").classList.remove("hidden");
+      loadBrandingSettings();
+    }
+
+    // Get current input configuration values
+    function getCurrentSettingsFromInputs() {
+      return {
+        header: document.getElementById("cfg-header").value.trim() || DEFAULT_BRANDING.header,
+        subtitle: document.getElementById("cfg-subtitle").value.trim() || DEFAULT_BRANDING.subtitle,
+        logoUrl: document.getElementById("cfg-logo").value.trim(),
+        footer: document.getElementById("cfg-footer").value.trim() || DEFAULT_BRANDING.footer,
+        colorPrimary: document.getElementById("cfg-color-primary").value,
+        colorAccent: document.getElementById("cfg-color-accent").value
+      };
+    }
+
+    // Load Branding Settings
+    function loadBrandingSettings() {
+      const stored = localStorage.getItem(BRANDING_STORAGE_KEY) || localStorage.getItem("dev_branding_settings");
+      let settings = DEFAULT_BRANDING;
+
+      if (stored) {
+        try {
+          settings = { ...DEFAULT_BRANDING, ...JSON.parse(stored) };
+        } catch(e) {
+          settings = DEFAULT_BRANDING;
+        }
+      }
+
+      document.getElementById("cfg-header").value = settings.header;
+      document.getElementById("cfg-subtitle").value = settings.subtitle;
+      document.getElementById("cfg-logo").value = settings.logoUrl;
+      document.getElementById("cfg-footer").value = settings.footer;
+      document.getElementById("cfg-color-primary").value = settings.colorPrimary;
+      document.getElementById("cfg-color-accent").value = settings.colorAccent;
+
+      updateLivePreview();
+    }
+
+    // Live Input Handler - Triggers live preview & cross-window sync in real-time
+    function handleLiveInputSync() {
+      updateLivePreview();
+      
+      const settings = getCurrentSettingsFromInputs();
+      localStorage.setItem(BRANDING_STORAGE_KEY, JSON.stringify(settings));
+
+      // Sync to Firebase Database if online
+      if (brandingRef) {
+        brandingRef.set(settings).catch(err => console.warn("Firebase live sync warn:", err));
+      }
+    }
+
+    // Dynamic Live Preview Handler
+    function updateLivePreview() {
+      const settings = getCurrentSettingsFromInputs();
+
+      document.getElementById("cfg-color-primary-hex").innerText = settings.colorPrimary.toUpperCase();
+      document.getElementById("cfg-color-accent-hex").innerText = settings.colorAccent.toUpperCase();
+
+      document.getElementById("preview-title").innerText = settings.header;
+      document.getElementById("preview-subtitle").innerText = settings.subtitle;
+      document.getElementById("preview-footer-text").innerText = settings.footer;
+
+      const headerBox = document.getElementById("preview-header-box");
+      headerBox.style.backgroundColor = settings.colorPrimary;
+      headerBox.style.borderBottomColor = settings.colorAccent;
+
+      const logoImg = document.getElementById("preview-logo-img");
+      const logoFallback = document.getElementById("preview-logo-fallback");
+
+      if (settings.logoUrl) {
+        logoImg.src = settings.logoUrl;
+        logoImg.onload = () => {
+          logoImg.classList.remove("hidden");
+          logoFallback.classList.add("hidden");
+        };
+        logoImg.onerror = () => {
+          logoImg.classList.add("hidden");
+          logoFallback.classList.remove("hidden");
+        };
+      } else {
+        logoImg.classList.add("hidden");
+        logoFallback.classList.remove("hidden");
+      }
+    }
+
+    // Explicit Form Submission Handler
+    function handleSaveBranding(e) {
+      if (e) e.preventDefault();
+
+      const settings = getCurrentSettingsFromInputs();
+
+      // Save to primary shared local key
+      localStorage.setItem(BRANDING_STORAGE_KEY, JSON.stringify(settings));
+      localStorage.setItem("dev_branding_settings", JSON.stringify(settings));
+
+      // Sync to Firebase Database
+      if (brandingRef) {
+        ensureFirebaseAuth();
+        brandingRef.set(settings)
+          .then(() => showToast("School Logo & Branding saved and synchronized to Cloud Database!", "success"))
+          .catch((err) => {
+            console.error("Firebase save error:", err);
+            showToast("Saved locally (Firebase sync pending)", "warning");
+          });
+      } else {
+        showToast("Branding settings saved & synchronized locally.", "success");
+      }
+    }
+
+    function resetBrandingDefaults() {
+      if (confirm("Reset all branding options to default system properties?")) {
+        localStorage.removeItem(BRANDING_STORAGE_KEY);
+        localStorage.removeItem("dev_branding_settings");
+        if (brandingRef) brandingRef.remove();
+        loadBrandingSettings();
+        handleSaveBranding(null);
+        showToast("Branding reset to system defaults.", "info");
+      }
+    }
+
+    function showToast(msg, type = "info") {
+      const toast = document.getElementById("dev-toast");
+      const text = document.getElementById("dev-toast-msg");
+      const icon = document.getElementById("dev-toast-icon");
+
+      text.innerText = msg;
+      if (type === "success") {
+        icon.className = "fa-solid fa-circle-check text-emerald-400 text-lg";
+      } else if (type === "warning") {
+        icon.className = "fa-solid fa-triangle-exclamation text-amber-400 text-lg";
+      } else {
+        icon.className = "fa-solid fa-circle-info text-blue-400 text-lg";
+      }
+
+      toast.classList.remove("translate-y-20", "opacity-0");
+      toast.classList.add("translate-y-0", "opacity-100");
+
+      setTimeout(() => {
+        toast.classList.remove("translate-y-0", "opacity-100");
+        toast.classList.add("translate-y-20", "opacity-0");
+      }, 3500);
+    }
+  </script>
+</body>
+</html>
