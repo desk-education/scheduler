@@ -30,21 +30,30 @@
     if (typeof firebase !== "undefined" && firebase.auth) {
       firebase.auth().onAuthStateChanged(function(user) {
         if (!user && !sessionStorage.getItem("user_authenticated") && sessionStorage.getItem("user_role") !== "admin" && !sessionStorage.getItem("active_teacher_name")) {
-          window.location.replace("system.html");
+          window.location.replace("login.html");
         }
       });
     }
 
-    // --- DIRECT ADMIN ACCESS LOGIN HANDLER ---
+    // --- DIRECT ADMIN ACCESS LOGIN HANDLER (RESTRICTED WITH ADMIN PASSWORD PROMPT) ---
     function loginAsAdminDirectly() {
-      sessionStorage.setItem("user_role", "admin");
-      sessionStorage.setItem("user_name", "System Administrator");
-      sessionStorage.setItem("user_authenticated", "true");
-      sessionStorage.removeItem("active_teacher_name");
-      sessionStorage.removeItem("active_teacher_matched");
-      applyRoleRestrictions();
-      showToast("Signed in as Administrator with full system control.", "success");
-      switchTab('master');
+      // Feature: Restrict direct admin access via password validation prompt
+      const adminPass = prompt("Administrator Verification Required:\nPlease enter Admin Master Password to switch account role:");
+      if (adminPass === null) return; // User cancelled prompt
+
+      if (adminPass.trim() === "admin123" || adminPass.trim() === "admin") {
+        sessionStorage.setItem("user_role", "admin");
+        sessionStorage.setItem("user_name", "System Administrator");
+        sessionStorage.setItem("user_authenticated", "true");
+        sessionStorage.removeItem("active_teacher_name");
+        sessionStorage.removeItem("active_teacher_matched");
+        applyRoleRestrictions();
+        showToast("Signed in as Administrator with full system control.", "success");
+        switchTab('master');
+      } else {
+        alert("Access Denied: Incorrect Administrative Master Password.");
+        showToast("Incorrect Admin Password provided.", "warning");
+      }
     }
 
     // --- AUTHENTICATION & CHANGE USER HANDLER ---
@@ -56,13 +65,13 @@
       sessionStorage.removeItem("active_teacher_matched");
       if (typeof firebase !== 'undefined' && firebase.auth) {
         firebase.auth().signOut().then(() => {
-          window.location.href = '   index.html';
+          window.location.href = 'index.html';
         }).catch((err) => {
           console.error("Sign-out error:", err);
-          window.location.href = '   index.html';
+          window.location.href = 'index.html';
         });
       } else {
-        window.location.href = '   index.html';
+        window.location.href = 'index.html';
       }
     }
 
@@ -272,7 +281,7 @@
       ==========================================================================
       Restricts logged-in teachers to view ONLY their personal "Teacher Timetable"
       and hides Section View, Master Matrix, Conflict Tracer, Workload Analytics,
-      Import JSON, Export JSON, and Auto-Solve Engine except for Admin/Developer.
+      Import JSON, Export JSON, Auto-Solve Engine, AND Direct Admin Access button.
     */
     function applyRoleRestrictions() {
       const activeTeacherName = sessionStorage.getItem("active_teacher_name");
@@ -284,6 +293,12 @@
       if (isTeacherSession) {
         // Hide all restricted views, navigation links, and administrative actions
         restrictedElements.forEach(el => el.classList.add('hidden'));
+
+        // Specifically hide direct admin access buttons in top bar and mobile dropdown
+        const adminBtn = document.getElementById('btn-direct-admin-access');
+        const adminDropItem = document.getElementById('dropdown-admin-item');
+        if (adminBtn) adminBtn.classList.add('hidden');
+        if (adminDropItem) adminDropItem.classList.add('hidden');
 
         // Lock teacher profile dropdown selection to the matched teacher
         const selectTeacher = document.getElementById('select-teacher');
@@ -300,6 +315,11 @@
         // Restore visibility for Admin and Developer users
         restrictedElements.forEach(el => el.classList.remove('hidden'));
         
+        const adminBtn = document.getElementById('btn-direct-admin-access');
+        const adminDropItem = document.getElementById('dropdown-admin-item');
+        if (adminBtn) adminBtn.classList.remove('hidden');
+        if (adminDropItem) adminDropItem.classList.remove('hidden');
+
         const selectTeacher = document.getElementById('select-teacher');
         if (selectTeacher) {
           selectTeacher.disabled = false;
@@ -380,8 +400,22 @@
       localStorage.setItem('registered_teacher_accounts_v1', JSON.stringify(accounts));
     }
 
+    function getStoredDeveloperAccessCode() {
+      return localStorage.getItem("dev_teacher_access_code") || "TEACHER2026";
+    }
+
     function handleTeacherRegisterSubmit(e) {
       e.preventDefault();
+      
+      // Feature: Verify developer access code prior to registration
+      const inputAccessCode = document.getElementById('t-reg-accesscode').value.trim();
+      const validCode = getStoredDeveloperAccessCode();
+
+      if (inputAccessCode !== validCode) {
+        showTeacherAuthError("Invalid Teacher Registration Access Code! Please contact developer or school administrator.");
+        return;
+      }
+
       const fullName = document.getElementById('t-reg-fullname').value.trim();
       const email = document.getElementById('t-reg-email').value.trim().toLowerCase();
       const password = document.getElementById('t-reg-pass').value.trim();
