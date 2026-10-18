@@ -10,7 +10,7 @@ body { font-family: system-ui, -apple-system, sans-serif; }
     .conflict-glow { animation: pulse-red 2s infinite; }
     
     /* ENHANCEMENT: Enhanced Interactive Controls, Buttons & Clickable FX */
-    button, select, input[type="text"], input[type="file"], .draggable-card, #trash-dropzone {
+    button, select, input[type="text"], input[type="file"], input[type="password"], .draggable-card, #trash-dropzone {
       transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
       position: relative;
     }
