@@ -121,57 +121,77 @@
       }
     }
 
-    function handleTeacherRegisterAction() {
-      clearMessage();
-      const fullName = document.getElementById("teacherFullname").value.trim();
-      const email = document.getElementById("teacherEmail").value.trim().toLowerCase();
-      const password = document.getElementById("teacherPassword").value.trim();
+    
+async function handleTeacherRegisterAction() {
+  clearMessage();
+  const fullName = document.getElementById("teacherFullname").value.trim();
+  const email = document.getElementById("teacherEmail").value.trim().toLowerCase();
+  const password = document.getElementById("teacherPassword").value.trim();
 
-      if (!fullName) {
-        showMessage("Please enter your full real name.", "error");
-        return;
-      }
-      if (!isValidEmail(email)) {
-        showMessage("Please enter a valid teacher email address.", "error");
-        return;
-      }
-      if (password.length < 6) {
-        showMessage("Password must be at least 6 characters long.", "error");
-        return;
-      }
+  if (!fullName) {
+    showMessage("Please enter your full real name.", "error");
+    return;
+  }
+  if (!isValidEmail(email)) {
+    showMessage("Please enter a valid teacher email address.", "error");
+    return;
+  }
+  if (password.length < 6) {
+    showMessage("Password must be at least 6 characters long.", "error");
+    return;
+  }
 
-      const extracted = extractFamilyName(fullName);
-      const matched = findMatchingFacultyProfile(extracted);
+  const extracted = extractFamilyName(fullName);
+  const matched = findMatchingFacultyProfile(extracted);
 
-      const accounts = getRegisteredTeachers();
-      if (accounts.some(acc => acc.email === email)) {
-        showMessage("An account with this email already exists. Click 'Log In to Timetable' instead.", "error");
-        return;
-      }
+  setBusy(true, "create");
 
-      const newAccount = {
-        fullName: fullName,
-        email: email,
-        password: password,
-        familyName: extracted,
-        matchedTeacher: matched,
-        createdAt: new Date().toISOString()
-      };
-
-      accounts.push(newAccount);
-      localStorage.setItem('registered_teacher_accounts_v1', JSON.stringify(accounts));
-
-      if (database) {
-        database.ref('teacherAccounts').push(newAccount).catch(err => console.warn("Firebase teacher account sync notice:", err));
-      }
-
-      sessionStorage.setItem("active_teacher_name", fullName);
-      sessionStorage.setItem("active_teacher_matched", matched);
-      sessionStorage.setItem("user_authenticated", "true");
-
-      showMessage("Teacher account registered! Redirecting to your personal schedule…", "success");
-      setTimeout(() => { redirectToApp(); }, 1200);
+  try {
+    // 1. Create User directly inside Firebase Authentication
+    let userCredential = null;
+    if (auth) {
+      userCredential = await auth.createUserWithEmailAndPassword(email, password);
     }
+
+    const newAccount = {
+      fullName: fullName,
+      email: email,
+      familyName: extracted,
+      matchedTeacher: matched,
+      createdAt: new Date().toISOString()
+    };
+
+    // 2. Save profile information under Realtime Database
+    if (database) {
+      if (userCredential && userCredential.user) {
+        await database.ref('users/' + userCredential.user.uid + '/profile').set({
+          ...newAccount,
+          role: 'teacher'
+        });
+      }
+      await database.ref('teacherAccounts').push(newAccount);
+    }
+
+    // 3. Store local backup and set active session
+    const accounts = getRegisteredTeachers();
+    accounts.push({ ...newAccount, password: password });
+    localStorage.setItem('registered_teacher_accounts_v1', JSON.stringify(accounts));
+
+    sessionStorage.setItem("active_teacher_name", fullName);
+    sessionStorage.setItem("active_teacher_matched", matched);
+    sessionStorage.setItem("user_authenticated", "true");
+
+    showMessage("Teacher account registered in Firebase! Redirecting to schedule...", "success");
+    setTimeout(() => { redirectToApp(); }, 1200);
+
+  } catch (error) {
+    console.error("Firebase Auth Error:", error);
+    showMessage(friendlyAuthError(error, true), "error");
+    setBusy(false);
+  }
+}
+
+    
 
     function handleTeacherLoginAction() {
       clearMessage();
