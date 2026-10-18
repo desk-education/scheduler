@@ -79,13 +79,13 @@
 
       <form onsubmit="handleDevLogin(event)" class="space-y-4">
         <div>
-          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Developer Username</label>
-          <input type="text" id="dev-username" required placeholder="Enter developer username" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-medium focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition">
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Developer Email</label>
+          <input type="email" id="dev-username" required autocomplete="username" placeholder="Enter developer email" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-medium focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition">
         </div>
 
         <div>
           <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Developer Password</label>
-          <input type="password" id="dev-password" required placeholder="Enter developer password" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-medium focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition">
+          <input type="password" id="dev-password" required autocomplete="current-password" placeholder="Enter developer password" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-medium focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition">
         </div>
 
         <button type="submit" class="w-full py-3 bg-slate-900 hover:bg-slate-800 text-amber-400 font-bold text-sm rounded-xl transition shadow-md flex items-center justify-center">
@@ -209,6 +209,36 @@
               Class Scheduler • Authorized access only
             </div>
           </div>
+
+          <!-- Developer Quick Links: Main Console and Reserved Future Upgrade Links -->
+          <div class="bg-white rounded-2xl p-5 border border-slate-200 card-shadow">
+            <h3 class="text-base font-bold text-slate-900 mb-2 flex items-center">
+              <i class="fa-solid fa-link text-indigo-500 mr-2"></i> Developer Quick Links
+            </h3>
+            <p class="text-xs text-slate-500 mb-4">Open the developer maintenance screen or use these reserved spaces for future system upgrades.</p>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <!-- Link Button 1: Redirect to the dev.html screen -->
+              <a href="generator.html" class="inline-flex items-center justify-center px-3 py-2 rounded-lg text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2 transition shadow-sm" aria-label="Open Developer Maintenance Console">
+                <i class="fa-solid fa-screwdriver-wrench mr-2"></i> Access code Generator
+              </a>
+
+              <!-- Link Button 2: Reserved for a future upgrade -->
+              <a href="#" onclick="event.preventDefault();" aria-disabled="true" title="Reserved for a future upgrade" class="inline-flex items-center justify-center px-3 py-2 rounded-lg text-xs font-bold text-slate-500 bg-slate-100 border border-slate-200 cursor-not-allowed opacity-80">
+                <i class="fa-solid fa-puzzle-piece mr-2"></i> Future Upgrade 1
+              </a>
+
+              <!-- Link Button 3: Reserved for a future upgrade -->
+              <a href="#" onclick="event.preventDefault();" aria-disabled="true" title="Reserved for a future upgrade" class="inline-flex items-center justify-center px-3 py-2 rounded-lg text-xs font-bold text-slate-500 bg-slate-100 border border-slate-200 cursor-not-allowed opacity-80">
+                <i class="fa-solid fa-layer-group mr-2"></i> Future Upgrade 2
+              </a>
+
+              <!-- Link Button 4: Reserved for a future upgrade -->
+              <a href="#" onclick="event.preventDefault();" aria-disabled="true" title="Reserved for a future upgrade" class="inline-flex items-center justify-center px-3 py-2 rounded-lg text-xs font-bold text-slate-500 bg-slate-100 border border-slate-200 cursor-not-allowed opacity-80">
+                <i class="fa-solid fa-rocket mr-2"></i> Future Upgrade 3
+              </a>
+            </div>
+          </div>
         </div>
 
       </div>
@@ -231,6 +261,12 @@
     // --- SHARED STORAGE KEY WITH index.html ---
     const BRANDING_STORAGE_KEY = "classSchedulerLoginBrandingV1";
 
+    // SECURITY SETUP REQUIRED BEFORE DEPLOYMENT:
+    // 1. Enable Email/Password in Firebase Authentication and create the developer account.
+    // 2. In Realtime Database, create developerAccess/{that Firebase user's UID} with:
+    //    { "enabled": true, "role": "developer" }
+    // 3. Set strict Realtime Database Security Rules. Never allow public writes to appBranding.
+    // 4. Do not store raw passwords or reusable password hashes in Realtime Database.
     // --- FIREBASE CONFIGURATION ---
     const firebaseConfig = {
       apiKey: "AIzaSyA2paUzz5cVQWEN8tmYLcOWpOaiXiuEfDA",
@@ -269,50 +305,152 @@
       colorAccent: "#f4b400"
     };
 
-    // Ensure Firebase Authentication is Active for Database Writes
-    function ensureFirebaseAuth() {
-      if (auth && !auth.currentUser) {
-        auth.signInAnonymously().catch(err => {
-          console.warn("Anonymous auth failed, relying on database fallback rules:", err);
-        });
-      }
-    }
+    // --- SECURE DEVELOPER AUTHENTICATION ---
+    // IMPORTANT:
+    // Do NOT store developer passwords as plain text in Firebase Realtime Database.
+    // Firebase Authentication securely verifies the email/password credential.
+    // Realtime Database stores only the authorization record:
+    // developerAccess/{uid} = { enabled: true, role: "developer" }
+    // Configure strict Firebase Security Rules so only authorized developers can
+    // read/write appBranding and users can read only their own developerAccess record.
+
+    let developerAuthorized = false;
 
     // Session Verification
     window.onload = function() {
-      const isAuth = sessionStorage.getItem("dev_authenticated");
-      if (isAuth === "true") {
-        ensureFirebaseAuth();
-        showDashboard();
-      } else {
-        showAuthCard();
+      showAuthCard();
+
+      if (!auth || !db) {
+        showAuthError("Firebase could not initialize. Check the Firebase configuration and network connection.");
+        return;
       }
+
+      // Never trust sessionStorage as proof of developer authorization.
+      // Re-check Firebase identity and the developer role on every page load.
+      auth.onAuthStateChanged(async function(user) {
+        if (!user) {
+          developerAuthorized = false;
+          sessionStorage.removeItem("dev_authenticated");
+          showAuthCard();
+          return;
+        }
+
+        try {
+          const accessSnapshot = await db.ref("developerAccess/" + user.uid).once("value");
+          const access = accessSnapshot.val();
+
+          if (access && access.enabled === true && access.role === "developer") {
+            developerAuthorized = true;
+            sessionStorage.setItem("dev_authenticated", "true");
+            showDashboard();
+          } else {
+            developerAuthorized = false;
+            sessionStorage.removeItem("dev_authenticated");
+            await auth.signOut();
+            showAuthCard();
+            showAuthError("This Firebase account is not authorized to access the Developer Maintenance Console.");
+          }
+        } catch (err) {
+          console.error("Developer authorization check failed:", err);
+          developerAuthorized = false;
+          sessionStorage.removeItem("dev_authenticated");
+          showAuthCard();
+          showAuthError("Unable to verify developer permissions. Check Firebase Realtime Database rules and your network connection.");
+        }
+      });
     };
 
     // Developer Authentication Logic
-    function handleDevLogin(e) {
+    async function handleDevLogin(e) {
       e.preventDefault();
-      const user = document.getElementById("dev-username").value.trim();
-      const pass = document.getElementById("dev-password").value.trim();
 
-      // Developer Credentials Validation
-      if (user === "developer" && pass === "dev123456") {
+      const email = document.getElementById("dev-username").value.trim();
+      const pass = document.getElementById("dev-password").value;
+
+      if (!auth || !db) {
+        showAuthError("Firebase Authentication or Realtime Database is unavailable.");
+        return;
+      }
+
+      const submitButton = e.submitter || document.querySelector('#dev-auth-card button[type="submit"]');
+      if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.classList.add("opacity-60", "cursor-not-allowed");
+      }
+
+      try {
+        // Firebase Authentication verifies the password; it is never stored in RTDB.
+        const credential = await auth.signInWithEmailAndPassword(email, pass);
+        const user = credential.user;
+
+        if (!user) {
+          throw new Error("Firebase Authentication did not return a user.");
+        }
+
+        // A valid Firebase account is not automatically a developer.
+        // Verify the explicit developer role stored in Realtime Database.
+        const accessSnapshot = await db.ref("developerAccess/" + user.uid).once("value");
+        const access = accessSnapshot.val();
+
+        if (!access || access.enabled !== true || access.role !== "developer") {
+          developerAuthorized = false;
+          sessionStorage.removeItem("dev_authenticated");
+          await auth.signOut();
+          showAuthError("Your account is valid, but it does not have developer privileges.");
+          return;
+        }
+
+        developerAuthorized = true;
         sessionStorage.setItem("dev_authenticated", "true");
         document.getElementById("auth-error-msg").classList.add("hidden");
-        ensureFirebaseAuth();
         showDashboard();
-        showToast("Authenticated as Developer successfully.", "success");
-      } else {
-        document.getElementById("auth-error-text").innerText = "Invalid developer credentials. Check username/password.";
-        document.getElementById("auth-error-msg").classList.remove("hidden");
+        showToast("Developer authenticated successfully.", "success");
+      } catch (err) {
+        console.error("Developer sign-in failed:", err);
+        developerAuthorized = false;
+        sessionStorage.removeItem("dev_authenticated");
+
+        let message = "Developer sign-in failed. Verify your email and password.";
+        if (err && (err.code === "auth/invalid-credential" ||
+                    err.code === "auth/user-not-found" ||
+                    err.code === "auth/wrong-password")) {
+          message = "Invalid developer email or password.";
+        } else if (err && err.code === "auth/too-many-requests") {
+          message = "Too many sign-in attempts. Please wait before trying again.";
+        } else if (err && err.code === "auth/operation-not-allowed") {
+          message = "Email/password sign-in is not enabled in Firebase Authentication.";
+        } else if (err && err.code === "auth/network-request-failed") {
+          message = "Network error. Check your internet connection and try again.";
+        }
+
+        showAuthError(message);
+      } finally {
+        if (submitButton) {
+          submitButton.disabled = false;
+          submitButton.classList.remove("opacity-60", "cursor-not-allowed");
+        }
       }
     }
 
-    function handleDevLogout() {
+    function showAuthError(message) {
+      const errorBox = document.getElementById("auth-error-msg");
+      const errorText = document.getElementById("auth-error-text");
+      if (errorText) errorText.innerText = message;
+      if (errorBox) errorBox.classList.remove("hidden");
+    }
+
+    async function handleDevLogout() {
+      developerAuthorized = false;
       sessionStorage.removeItem("dev_authenticated");
-      if (auth && auth.currentUser) {
-        auth.signOut();
+
+      try {
+        if (auth && auth.currentUser) {
+          await auth.signOut();
+        }
+      } catch (err) {
+        console.error("Firebase sign-out failed:", err);
       }
+
       showAuthCard();
       showToast("Developer console locked.", "info");
     }
@@ -323,6 +461,10 @@
     }
 
     function showDashboard() {
+      if (!developerAuthorized) {
+        showAuthCard();
+        return;
+      }
       document.getElementById("dev-auth-card").classList.add("hidden");
       document.getElementById("dev-dashboard").classList.remove("hidden");
       loadBrandingSettings();
@@ -411,8 +553,15 @@
     }
 
     // Explicit Form Submission Handler
-    function handleSaveBranding(e) {
+    async function handleSaveBranding(e) {
       if (e) e.preventDefault();
+
+      // Defense in depth: do not save branding from an unverified browser session.
+      if (!developerAuthorized || !auth || !auth.currentUser) {
+        showToast("Save denied: please authenticate as an authorized developer.", "warning");
+        showAuthCard();
+        return;
+      }
 
       const settings = getCurrentSettingsFromInputs();
 
@@ -420,17 +569,17 @@
       localStorage.setItem(BRANDING_STORAGE_KEY, JSON.stringify(settings));
       localStorage.setItem("dev_branding_settings", JSON.stringify(settings));
 
-      // Sync to Firebase Database
+      // Sync to Firebase Database only after verified developer authentication.
       if (brandingRef) {
-        ensureFirebaseAuth();
-        brandingRef.set(settings)
-          .then(() => showToast("School Logo & Branding saved and synchronized to Cloud Database!", "success"))
-          .catch((err) => {
-            console.error("Firebase save error:", err);
-            showToast("Saved locally (Firebase sync pending)", "warning");
-          });
+        try {
+          await brandingRef.set(settings);
+          showToast("School Logo & Branding saved and synchronized to Cloud Database!", "success");
+        } catch (err) {
+          console.error("Firebase save error:", err);
+          showToast("Saved locally, but Firebase synchronization failed.", "warning");
+        }
       } else {
-        showToast("Branding settings saved & synchronized locally.", "success");
+        showToast("Saved locally only. Firebase is unavailable.", "warning");
       }
     }
 
