@@ -42,6 +42,7 @@
     let database = null;
     let firebaseReady = false;
     let isRedirecting = false;
+    let isRegisteringTeacher = false;
 
     function showMessage(message, type) {
       statusMessage.textContent = message;
@@ -121,77 +122,81 @@
       }
     }
 
-    
-async function handleTeacherRegisterAction() {
-  clearMessage();
-  const fullName = document.getElementById("teacherFullname").value.trim();
-  const email = document.getElementById("teacherEmail").value.trim().toLowerCase();
-  const password = document.getElementById("teacherPassword").value.trim();
-
-  if (!fullName) {
-    showMessage("Please enter your full real name.", "error");
-    return;
-  }
-  if (!isValidEmail(email)) {
-    showMessage("Please enter a valid teacher email address.", "error");
-    return;
-  }
-  if (password.length < 6) {
-    showMessage("Password must be at least 6 characters long.", "error");
-    return;
-  }
-
-  const extracted = extractFamilyName(fullName);
-  const matched = findMatchingFacultyProfile(extracted);
-
-  setBusy(true, "create");
-
-  try {
-    // 1. Create User directly inside Firebase Authentication
-    let userCredential = null;
-    if (auth) {
-      userCredential = await auth.createUserWithEmailAndPassword(email, password);
+    function getDeveloperTeacherAccessCode() {
+      return localStorage.getItem("dev_teacher_access_code") || "TEACHER2026";
     }
 
-    const newAccount = {
-      fullName: fullName,
-      email: email,
-      familyName: extracted,
-      matchedTeacher: matched,
-      createdAt: new Date().toISOString()
-    };
-
-    // 2. Save profile information under Realtime Database
-    if (database) {
-      if (userCredential && userCredential.user) {
-        await database.ref('users/' + userCredential.user.uid + '/profile').set({
-          ...newAccount,
-          role: 'teacher'
-        });
+    function handleTeacherRegisterAction() {
+      clearMessage();
+      const accessCodeField = document.getElementById("field-teacher-access-code");
+      
+      if (!isRegisteringTeacher) {
+        // Toggle view to display access code field and registration interface
+        isRegisteringTeacher = true;
+        accessCodeField.style.display = "block";
+        document.getElementById("teacherRegisterButton").textContent = "Submit Registration & Verify Access Code";
+        showMessage("Enter the Teacher Registration Access Code generated in the Developer Console to complete registration.", "success");
+        return;
       }
-      await database.ref('teacherAccounts').push(newAccount);
+
+      const accessCodeInput = document.getElementById("teacherAccessCode").value.trim();
+      const validCode = getDeveloperTeacherAccessCode();
+
+      // Feature: Access code enforcement logic
+      if (accessCodeInput !== validCode) {
+        showMessage("Invalid Registration Access Code! Please request the access code generated in Developer Console.", "error");
+        return;
+      }
+
+      const fullName = document.getElementById("teacherFullname").value.trim();
+      const email = document.getElementById("teacherEmail").value.trim().toLowerCase();
+      const password = document.getElementById("teacherPassword").value.trim();
+
+      if (!fullName) {
+        showMessage("Please enter your Full Name.", "error");
+        return;
+      }
+      if (!isValidEmail(email)) {
+        showMessage("Please enter a valid teacher email address.", "error");
+        return;
+      }
+      if (password.length < 6) {
+        showMessage("Password must be at least 6 characters long.", "error");
+        return;
+      }
+
+      const extracted = extractFamilyName(fullName);
+      const matched = findMatchingFacultyProfile(extracted);
+
+      const accounts = getRegisteredTeachers();
+      if (accounts.some(acc => acc.email === email)) {
+        showMessage("An account with this email already exists. Click 'Log In to Timetable' instead.", "error");
+        return;
+      }
+
+      const newAccount = {
+        fullName: fullName,
+        email: email,
+        password: password,
+        familyName: extracted,
+        matchedTeacher: matched,
+        createdAt: new Date().toISOString()
+      };
+
+      accounts.push(newAccount);
+      localStorage.setItem('registered_teacher_accounts_v1', JSON.stringify(accounts));
+
+      if (database) {
+        database.ref('teacherAccounts').push(newAccount).catch(err => console.warn("Firebase teacher account sync notice:", err));
+      }
+
+      sessionStorage.setItem("active_teacher_name", fullName);
+      sessionStorage.setItem("active_teacher_matched", matched);
+      sessionStorage.setItem("user_authenticated", "true");
+
+      showMessage("Teacher account registered! Redirecting to your personal schedule…", "success");
+      setTimeout(() => { redirectToApp(); }, 1200);
     }
-
-    // 3. Store local backup and set active session
-    const accounts = getRegisteredTeachers();
-    accounts.push({ ...newAccount, password: password });
-    localStorage.setItem('registered_teacher_accounts_v1', JSON.stringify(accounts));
-
-    sessionStorage.setItem("active_teacher_name", fullName);
-    sessionStorage.setItem("active_teacher_matched", matched);
-    sessionStorage.setItem("user_authenticated", "true");
-
-    showMessage("Teacher account registered in Firebase! Redirecting to schedule...", "success");
-    setTimeout(() => { redirectToApp(); }, 1200);
-
-  } catch (error) {
-    console.error("Firebase Auth Error:", error);
-    showMessage(friendlyAuthError(error, true), "error");
-    setBusy(false);
-  }
-}
-
-    
 
     function handleTeacherLoginAction() {
       clearMessage();
@@ -249,7 +254,7 @@ async function handleTeacherRegisterAction() {
       }
       return isCreating
         ? "Could not create the account. Check Firebase settings and try again."
-        : "Unable to sign in. Check your connection and Firebase settings, then try again.";
+        : "Unable to sign in. Check your connection and Database settings, then try again.";
     }
 
     async function saveUserProfile(user, email) {
