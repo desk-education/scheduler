@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Developer Maintenance Console</title>
+  
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --accent: #f59e0b;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --border: #334155;
+    }
+    body {
+      margin: 0;
+      padding: 24px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+    .container {
+      max-width: 800px;
+      margin: auto;
+    }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    }
+    h1, h2 { color: var(--accent); margin-top: 0; }
+    .field { margin-bottom: 16px; }
+    label { display: block; margin-bottom: 6px; font-size: 0.85rem; font-weight: bold; color: var(--muted); }
+    input {
+      width: 100%;
+      padding: 12px;
+      background: #0f172a;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: #fff;
+      box-sizing: border-box;
+      font-size: 0.95rem;
+    }
+    button {
+      background: var(--accent);
+      color: #000;
+      font-weight: bold;
+      border: 0;
+      padding: 12px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+    button:hover { filter: brightness(1.1); }
+    .code-box {
+      background: #020617;
+      border: 2px dashed var(--accent);
+      padding: 16px;
+      border-radius: 12px;
+      text-align: center;
+      font-family: monospace;
+      font-size: 1.5rem;
+      color: #fbbf24;
+      margin: 16px 0;
+      letter-spacing: 2px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>🛠️ Developer Maintenance Console</h1>
+  <p style="color: var(--muted);">System Administration & Security Controls</p>
+
+  <!-- FEATURE: TEACHER REGISTRATION ACCESS CODE GENERATOR -->
+  <div class="card">
+    <h2>🔑 Teacher Registration Access Code Generator</h2>
+    <p style="color: var(--muted); font-size: 0.9rem;">
+      Generate an authorized Access Code required for new teachers to register their personal timetable profile.
+    </p>
+
+    <div class="code-box" id="currentCodeDisplay">
+      TEACHER2026
+    </div>
+
+    <div class="field">
+      <label>Custom Teacher Access Code</label>
+      <input type="text" id="customCodeInput" placeholder="Enter custom code e.g. SCH-2026-TEACH">
+    </div>
+
+    <div style="display: flex; gap: 10px;">
+      <button onclick="generateRandomAccessCode()">⚡ Generate Random Code</button>
+      <button onclick="saveCustomAccessCode()" style="background: #10b981; color: #fff;">💾 Save Access Code</button>
+    </div>
+  </div>
+
+
+
+  <div style="text-align: center; margin-top: 20px;">
+    <a href="dev.html" style="color: var(--accent); text-decoration: none; font-weight: bold;">← Return to Developer Screen</a>
+  </div>
+</div>
+
+<script>
+  const ACCESS_CODE_KEY = "dev_teacher_access_code";
+
+  function loadCurrentAccessCode() {
+    const code = localStorage.getItem(ACCESS_CODE_KEY) || "TEACHER2026";
+    document.getElementById("currentCodeDisplay").innerText = code;
+    document.getElementById("customCodeInput").value = code;
+  }
+
+  function generateRandomAccessCode() {
+    const randomCode = "TEACH-" + Math.floor(100000 + Math.random() * 900000);
+    document.getElementById("customCodeInput").value = randomCode;
+    saveCodeToStorage(randomCode);
+  }
+
+  function saveCustomAccessCode() {
+    const val = document.getElementById("customCodeInput").value.trim();
+    if (!val) {
+      alert("Please enter a valid access code.");
+      return;
+    }
+    saveCodeToStorage(val);
+  }
+
+  function saveCodeToStorage(code) {
+    localStorage.setItem(ACCESS_CODE_KEY, code);
+    document.getElementById("currentCodeDisplay").innerText = code;
+    alert("New Teacher Access Code saved successfully: " + code);
+  }
+
+  function saveBranding() {
+    const settings = {
+      header: document.getElementById("devHeader").value,
+      subtitle: document.getElementById("devSubtitle").value
+    };
+    localStorage.setItem("classSchedulerLoginBrandingV1", JSON.stringify(settings));
+    alert("Branding settings saved!");
+  }
+
+  window.onload = function() {
+    loadCurrentAccessCode();
+  };
+</script>
+
+</body>
+</html>
