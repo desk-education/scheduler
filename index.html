@@ -79,7 +79,9 @@
           </div>
         </div>
         <button class="primary-button" type="submit" id="loginButton">Log In</button>
-        <button class="secondary-button" type="button" id="createAccountButton">Create Account</button>
+
+        <!-- Hidden anchor button to preserve script2.js DOM reference without rendering on screen -->
+        <button type="button" id="createAccountButton" style="display: none !important;" aria-hidden="true"></button>
       </form>
 
       <!-- FORM 2: TEACHER REGISTRATION & LOGIN DEDICATED FORM -->
