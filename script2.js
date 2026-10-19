@@ -338,7 +338,7 @@
       const confirmed = window.confirm("Create a new account for email \"" + email + "\"? Use this only if self-registration is permitted by your school.");
       if (!confirmed) return;
 
-      setBusy(true, "create");
+      setBusy(false, "create");
       try {
         const credential = await auth.createUserWithEmailAndPassword(email, password);
         try {
