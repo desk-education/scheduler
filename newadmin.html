@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#12345a">
+  <title>Class Scheduler | Log In</title>
+
+  <!-- Firebase compat SDKs: authentication handles passwords; Realtime Database stores user profiles and app settings. -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <link rel="stylesheet" href="style2.css">
+<!--
+  <style>
+    style2
+  </style>
+-->
+</head>
+
+<body>
+  <header class="site-header" id="siteHeader">
+    <div class="header-inner">
+      <div class="logo-wrap" aria-label="School logo">
+        <img id="schoolLogo" alt="School logo">
+        <span class="logo-fallback" id="logoFallback" aria-hidden="true">🏫</span>
+      </div>
+      <div class="header-copy">
+        <p class="eyebrow">School Scheduling System</p>
+        <h1 id="mainHeader">Grade 12 Class Scheduler</h1>
+        <p class="header-subtitle" id="headerSubtitle">Secure access for authorized users</p>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="welcome-panel" aria-labelledby="welcomeTitle">
+      <span class="welcome-tag">✓ Organized · Responsive · Connected</span>
+      <h2 id="welcomeTitle">Plan smarter. Schedule with confidence.</h2>
+      <p>
+        Sign in to open the class scheduling workspace. The page adapts to desktop
+        computers, tablets, and mobile phones, so the sign-in form remains readable
+        and usable on different screen sizes.
+      </p>
+      <ul class="feature-list">
+        <li><span class="feature-icon" aria-hidden="true">✓</span><span><strong>Secure sign-in</strong><br>Passwords are handled with E-mail Authentication, not stored as readable text in Realtime Database.</span></li>
+        <li><span class="feature-icon" aria-hidden="true">👨‍🏫</span><span><strong>Teacher Portal Sync</strong><br>Faculty members can register their full name to automatically match their family name and align their personal timetable.</span></li>
+        <li><span class="feature-icon" aria-hidden="true">↔</span><span><strong>Responsive layout</strong><br>Flexible spacing and controls designed for touchscreens and larger displays.</span></li>
+        <li><span class="feature-icon" aria-hidden="true">⚙</span><span><strong>School branding</strong><br>Customized globally across all screens via the Developer Maintenance Console.</span></li>
+      </ul>
+    </section>
+
+    <section class="login-card" aria-labelledby="loginTitle">
+      <h2 class="card-heading" id="loginTitle">Welcome back</h2>
+      <p class="card-intro" id="formDescription">Select portal type and enter your credentials.</p>
+
+      <!-- Portal Mode Selector -->
+      <div class="portal-tab-group">
+        <button type="button" class="portal-tab-btn active" id="tab-mode-standard" onclick="switchPortalMode('standard')">Admin Portal</button>
+        <button type="button" class="portal-tab-btn" id="tab-mode-teacher" onclick="switchPortalMode('teacher')">Teacher Portal</button>
+      </div>
+
+      <div id="statusMessage" class="message" role="status" aria-live="polite"></div>
+
+      <!-- FORM 1: STANDARD SYSTEM LOGIN FORM -->
+      <form id="loginForm" novalidate>
+        <div class="field">
+          <label for="email">Email Address</label>
+          <input id="email" name="email" type="email" autocomplete="email"
+                 autocapitalize="none" spellcheck="false"
+                 placeholder="e.g. user@school.edu" required>
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <div class="password-row">
+            <input id="password" name="password" type="password" autocomplete="current-password"
+                   placeholder="Enter your password" minlength="6" required>
+            <button class="show-password" type="button" id="togglePassword" aria-pressed="false">Show</button>
+          </div>
+        </div>
+        <button class="primary-button" type="submit" id="loginButton">Log In</button>
+        <button class="secondary-button" type="button" id="createAccountButton">Create Account</button>
+      </form>
+
+      <!-- FORM 2: TEACHER REGISTRATION & LOGIN DEDICATED FORM -->
+      <form id="teacherForm" style="display: none;" novalidate>
+        <div class="field" id="field-teacher-access-code" style="display: none;">
+          <label for="teacherAccessCode">Teacher Registration Access Code</label>
+          <input id="teacherAccessCode" name="teacherAccessCode" type="text"
+                 placeholder="Enter developer access code" style="background-color: #fffbe3; font-weight: bold; border-color: #f4b400;">
+          <p style="font-size: 0.75rem; color: #64748b; margin-top: 4px;">Developer access code generated in Developer Console is required for registration.</p>
+        </div>
+
+        <div class="field" id="teacher-fullname-field">
+          <label for="teacherFullname">Full Name (For Registration)</label>
+          <input id="teacherFullname" name="teacherFullname" type="text"
+                 placeholder="e.g. Maria Clara Santos LAPIZ" oninput="livePreviewTeacherMatch()">
+        </div>
+
+        <div class="matched-preview-box" id="teacher-match-box">
+          Family Name Extracted: <span id="teacher-preview-name">---</span>
+        </div>
+
+        <div class="field">
+          <label for="teacherEmail">Teacher Email Address</label>
+          <input id="teacherEmail" name="teacherEmail" type="email" autocomplete="email"
+                 autocapitalize="none" spellcheck="false"
+                 placeholder="e.g. teacher@school.edu" required>
+        </div>
+
+        <div class="field">
+          <label for="teacherPassword">Password</label>
+          <div class="password-row">
+            <input id="teacherPassword" name="teacherPassword" type="password"
+                   placeholder="Enter your password" minlength="6" required>
+            <button class="show-password" type="button" id="toggleTeacherPassword" aria-pressed="false">Show</button>
+          </div>
+        </div>
+
+        <button class="teacher-button" type="button" id="teacherLoginButton" onclick="handleTeacherLoginAction()">Log In to Timetable</button>
+        <button class="secondary-button" type="button" id="teacherRegisterButton" onclick="handleTeacherRegisterAction()">Register New Teacher Account</button>
+      </form>
+
+      <div class="separator">OR</div>
+      <a class="developer-link" href="dev.html">Developer Log-in <span aria-hidden="true">&nbsp;↗</span></a>
+
+      <p class="small-note">
+        Teacher accounts automatically map family names to the 35 school faculty profiles. Do not share your password.
+      </p>
+    </section>
+  </main>
+
+  <footer id="siteFooter">&copy; 2026 | Class Scheduler · Authorized access only</footer>
+
+  <!-- Script Override: Prevents automatic session redirects so users can land on the Create Account form -->
+  <script>
+    // Clears stored session state that triggers script2.js auto-login redirect
+    sessionStorage.removeItem("user_authenticated");
+    sessionStorage.removeItem("active_teacher_name");
+
+    // Overrides redirectToApp to disable automatic page navigation upon loading
+    window.redirectToApp = function() {
+      // Intentionally empty to disable auto-login redirect
+    };
+  </script>
+
+<!--
+  <script>
+    script2
+  </script>
+-->
+  <script src="script2.js"></script>
+</body>
+</html>
